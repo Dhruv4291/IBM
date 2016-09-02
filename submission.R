@@ -1,33 +1,25 @@
-# Trevor Stephens - 18 Jan 2014
-# Titanic: Getting Started With R - Part 5: Random Forests
-# Full guide available at http://trevorstephens.com/
-
-# Set working directory and import datafiles
 setwd("~/Kaggle/Titanic")
 train <- read.csv("train.csv")
 test <- read.csv("test.csv")
-
-# Install and load required packages for decision trees and forests
 library(rpart)
 install.packages('randomForest')
 library(randomForest)
 install.packages('party')
 library(party)
-
-# Join together the test and train sets for easier feature engineering
+# Join together the test and train sets
 test$Survived <- NA
 combi <- rbind(train, test)
 
 # Convert to a string
 combi$Name <- as.character(combi$Name)
 
-# Engineered variable: Title
 combi$Title <- sapply(combi$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][2]})
 combi$Title <- sub(' ', '', combi$Title)
 # Combine small title groups
 combi$Title[combi$Title %in% c('Mme', 'Mlle')] <- 'Mlle'
 combi$Title[combi$Title %in% c('Capt', 'Don', 'Major', 'Sir')] <- 'Sir'
 combi$Title[combi$Title %in% c('Dona', 'Lady', 'the Countess', 'Jonkheer')] <- 'Lady'
+
 # Convert to a factor
 combi$Title <- factor(combi$Title)
 
@@ -38,10 +30,12 @@ combi$FamilySize <- combi$SibSp + combi$Parch + 1
 combi$Surname <- sapply(combi$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][1]})
 combi$FamilyID <- paste(as.character(combi$FamilySize), combi$Surname, sep="")
 combi$FamilyID[combi$FamilySize <= 2] <- 'Small'
+
 # Delete erroneous family IDs
 famIDs <- data.frame(table(combi$FamilyID))
 famIDs <- famIDs[famIDs$Freq <= 2,]
 combi$FamilyID[combi$FamilyID %in% famIDs$Var1] <- 'Small'
+
 # Convert to a factor
 combi$FamilyID <- factor(combi$FamilyID)
 
